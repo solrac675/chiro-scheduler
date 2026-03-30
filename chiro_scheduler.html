@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ChiroScheduler</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --blue:#1a5fa8;--blue-dark:#0d4480;--blue-light:#e8f0fb;
+  --green:#2a7d5a;--green-light:#e6f5ee;
+  --red:#c0392b;--red-light:#fdf0ee;
+  --amber:#b07d1a;--amber-light:#fdf6e3;
+  --gray-50:#f8f8f6;--gray-100:#f0f0ed;--gray-200:#e2e2de;
+  --gray-400:#9e9e98;--gray-600:#5c5c58;--gray-900:#1a1a18;
+  --radius:10px;--radius-lg:14px;
+  --shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray-900);min-height:100vh;}
+.top-bar{background:white;border-bottom:1px solid var(--gray-200);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand-icon{width:34px;height:34px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.brand-icon svg{width:18px;height:18px;fill:white;}
+.brand-name{font-family:'DM Serif Display',serif;font-size:20px;color:var(--gray-900);}
+.user-info{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--gray-600);}
+.btn-signout{font-size:12px;padding:5px 12px;border:1px solid var(--gray-200);border-radius:6px;background:white;cursor:pointer;color:var(--gray-600);}
+.btn-signout:hover{background:var(--gray-50);}
+.auth-wrap{min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;padding:2rem;}
+.auth-card{background:white;border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:3rem 2.5rem;text-align:center;max-width:400px;width:100%;}
+.auth-icon{width:56px;height:56px;background:var(--blue-light);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;}
+.auth-icon svg{width:28px;height:28px;fill:var(--blue);}
+.auth-card h2{font-family:'DM Serif Display',serif;font-size:24px;margin-bottom:8px;}
+.auth-card p{font-size:14px;color:var(--gray-600);margin-bottom:1.75rem;line-height:1.6;}
+.btn-google{display:inline-flex;align-items:center;gap:10px;background:white;border:1.5px solid var(--gray-200);border-radius:8px;padding:11px 22px;font-size:14px;font-weight:500;cursor:pointer;color:var(--gray-900);font-family:'DM Sans',sans-serif;transition:border-color 0.15s,box-shadow 0.15s;}
+.btn-google:hover{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,95,168,0.1);}
+.container{max-width:860px;margin:0 auto;padding:2rem 1.5rem;}
+.tabs{display:flex;gap:2px;background:var(--gray-100);border-radius:10px;padding:3px;margin-bottom:1.5rem;}
+.tab{flex:1;padding:9px 12px;font-size:13px;font-weight:500;border:none;background:transparent;border-radius:8px;cursor:pointer;color:var(--gray-600);font-family:'DM Sans',sans-serif;transition:all 0.15s;}
+.tab.active{background:white;color:var(--gray-900);box-shadow:0 1px 3px rgba(0,0,0,0.08);}
+.form-card{background:white;border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:1.75rem;}
+.section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--gray-400);margin:1.5rem 0 0.875rem;padding-top:1.25rem;border-top:1px solid var(--gray-100);}
+.section-label.first{margin-top:0;padding-top:0;border-top:none;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.form-group label{font-size:12px;font-weight:500;color:var(--gray-600);}
+.form-group input,.form-group select,.form-group textarea{font-family:'DM Sans',sans-serif;font-size:14px;color:var(--gray-900);background:white;border:1.5px solid var(--gray-200);border-radius:var(--radius);padding:9px 12px;width:100%;transition:border-color 0.15s,box-shadow 0.15s;}
+.form-group textarea{resize:vertical;min-height:90px;line-height:1.5;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,95,168,0.1);}
+.form-group input::placeholder,.form-group textarea::placeholder{color:var(--gray-400);}
+.prac-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:4px;}
+.prac-card{border:1.5px solid var(--gray-200);border-radius:var(--radius);padding:12px 8px;cursor:pointer;text-align:center;transition:all 0.15s;background:white;}
+.prac-card:hover{border-color:var(--blue);background:var(--blue-light);}
+.prac-card.selected{border-color:var(--blue);border-width:2px;background:var(--blue-light);}
+.prac-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;margin:0 auto 7px;}
+.prac-name{font-size:12px;font-weight:500;color:var(--gray-900);}
+.prac-role{font-size:11px;color:var(--gray-400);margin-top:2px;}
+.add-prac-card{border:1.5px dashed var(--gray-200);border-radius:var(--radius);padding:12px 8px;cursor:pointer;text-align:center;transition:all 0.15s;background:none;font-family:'DM Sans',sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:88px;width:100%;}
+.add-prac-card:hover{border-color:var(--blue);}
+.add-prac-card .plus{font-size:22px;color:var(--gray-400);line-height:1;}
+.add-prac-card .lbl{font-size:11px;color:var(--gray-400);}
+.add-prac-card:hover .plus,.add-prac-card:hover .lbl{color:var(--blue);}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:none;align-items:center;justify-content:center;z-index:200;}
+.modal-overlay.show{display:flex;}
+.modal{background:white;border-radius:var(--radius-lg);box-shadow:0 8px 40px rgba(0,0,0,0.15);padding:1.75rem;width:100%;max-width:380px;margin:1rem;}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:1.25rem;}
+.modal-actions{display:flex;gap:10px;margin-top:1.25rem;}
+.btn-cancel{flex:1;padding:9px;border:1.5px solid var(--gray-200);border-radius:var(--radius);background:white;font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--gray-600);}
+.btn-save{flex:1;padding:9px;background:var(--blue);color:white;border:none;border-radius:var(--radius);font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.color-picker{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+.color-swatch{width:28px;height:28px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform 0.15s;}
+.color-swatch.selected{transform:scale(1.2);}
+.toggle-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.toggle-row .lbl{font-size:14px;color:var(--gray-600);}
+.toggle{position:relative;width:38px;height:21px;cursor:pointer;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-slider{position:absolute;inset:0;background:var(--gray-200);border-radius:999px;transition:background 0.2s;}
+.toggle-slider:before{content:'';position:absolute;width:15px;height:15px;left:3px;top:3px;background:white;border-radius:50%;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.15);}
+.toggle input:checked+.toggle-slider{background:var(--blue);}
+.toggle input:checked+.toggle-slider:before{transform:translateX(17px);}
+.recur-options{display:none;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);padding:14px;margin-bottom:14px;}
+.recur-options.show{display:block;}
+.recur-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.recur-row span{font-size:13px;color:var(--gray-600);}
+.recur-row select,.recur-row input[type=number]{font-family:'DM Sans',sans-serif;font-size:13px;padding:6px 10px;border:1.5px solid var(--gray-200);border-radius:7px;background:white;color:var(--gray-900);}
+.recur-row input[type=number]{width:64px;}
+.btn-submit{width:100%;padding:12px;background:var(--blue);color:white;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;margin-top:1.25rem;font-family:'DM Sans',sans-serif;transition:background 0.15s;}
+.btn-submit:hover{background:var(--blue-dark);}
+.btn-submit:disabled{background:var(--gray-200);color:var(--gray-400);cursor:not-allowed;}
+.success-banner{background:var(--green-light);border:1px solid #b0ddc8;border-radius:var(--radius);padding:12px 16px;font-size:14px;color:var(--green);margin-top:1rem;display:none;line-height:1.5;}
+.error-banner{background:var(--red-light);border:1px solid #f1c4be;border-radius:var(--radius);padding:12px 16px;font-size:14px;color:var(--red);margin-top:1rem;display:none;}
+.filter-bar{display:flex;gap:8px;margin-bottom:1.25rem;flex-wrap:wrap;}
+.filter-btn{font-size:12px;font-weight:500;padding:6px 14px;border-radius:999px;border:1.5px solid var(--gray-200);background:white;cursor:pointer;color:var(--gray-600);font-family:'DM Sans',sans-serif;transition:all 0.15s;}
+.filter-btn:hover{border-color:var(--blue);color:var(--blue);}
+.filter-btn.active{background:var(--blue);color:white;border-color:var(--blue);}
+.appt-list{display:flex;flex-direction:column;gap:10px;}
+.appt-item{background:white;border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:14px 16px;display:flex;align-items:flex-start;gap:14px;}
+.appt-date-block{min-width:50px;text-align:center;background:var(--blue-light);border-radius:8px;padding:7px 5px;flex-shrink:0;}
+.appt-month{font-size:10px;text-transform:uppercase;letter-spacing:0.07em;color:var(--blue);font-weight:600;}
+.appt-day{font-size:24px;font-weight:600;color:var(--blue);line-height:1.1;}
+.appt-info{flex:1;}
+.appt-title{font-size:14px;font-weight:500;color:var(--gray-900);margin-bottom:3px;}
+.appt-meta{font-size:12px;color:var(--gray-400);}
+.appt-badge{display:inline-block;font-size:11px;padding:2px 9px;border-radius:999px;font-weight:500;margin-left:7px;vertical-align:middle;}
+.badge-new{background:var(--blue-light);color:var(--blue);}
+.badge-adj{background:var(--green-light);color:var(--green);}
+.badge-urgent{background:var(--red-light);color:var(--red);}
+.badge-recur{background:var(--amber-light);color:var(--amber);}
+.badge-other{background:var(--gray-100);color:var(--gray-600);}
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--gray-400);font-size:14px;background:white;border-radius:var(--radius-lg);box-shadow:var(--shadow);}
+.loading-state{text-align:center;padding:2.5rem;color:var(--gray-400);font-size:14px;}
+@media(max-width:600px){
+  .form-row{grid-template-columns:1fr;}
+  .prac-grid{grid-template-columns:1fr 1fr;}
+  .container{padding:1rem;}
+  .top-bar{padding:0 1rem;}
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="brand">
+    <div class="brand-icon">
+      <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5C3.9 3 3 3.9 3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+    </div>
+    <span class="brand-name">ChiroScheduler</span>
+  </div>
+  <div class="user-info" id="userBar" style="display:none;">
+    <span id="userEmailDisplay"></span>
+    <button class="btn-signout" onclick="signOut()">Sign out</button>
+  </div>
+</div>
+
+<!-- AUTH -->
+<div class="auth-wrap" id="authSection">
+  <div class="auth-card">
+    <div class="auth-icon">
+      <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5C3.9 3 3 3.9 3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+    </div>
+    <h2>ChiroScheduler</h2>
+    <p>Connect your Google Calendar to book and manage patient appointments.</p>
+    <button class="btn-google" onclick="handleAuthClick()">
+      <svg width="18" height="18" viewBox="0 0 48 48">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+      </svg>
+      Sign in with Google
+    </button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appSection" style="display:none;">
+  <div class="container">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('book',this)">Book appointment</button>
+      <button class="tab" onclick="switchTab('upcoming',this)">Upcoming appointments</button>
+    </div>
+
+    <!-- BOOK TAB -->
+    <div id="tabBook" class="form-card">
+      <div class="section-label first">Practitioner</div>
+      <div class="prac-grid" id="pracGrid"></div>
+
+      <div class="section-label">Patient information</div>
+      <div class="form-row">
+        <div class="form-group"><label>First name *</label><input type="text" id="firstName" placeholder="Jane"/></div>
+        <div class="form-group"><label>Last name *</label><input type="text" id="lastName" placeholder="Smith"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Date of birth *</label><input type="date" id="dob"/></div>
+        <div class="form-group"><label>Phone number</label><input type="tel" id="phone" placeholder="(555) 000-0000"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Email address</label><input type="email" id="email" placeholder="jane@example.com"/></div>
+        <div class="form-group"><label>Insurance provider</label><input type="text" id="insurance" placeholder="e.g. Blue Cross, Aetna..."/></div>
+      </div>
+
+      <div class="section-label">Appointment details</div>
+      <div class="form-row">
+        <div class="form-group"><label>Date *</label><input type="date" id="apptDate"/></div>
+        <div class="form-group"><label>Time *</label><input type="time" id="apptTime"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Visit type *</label>
+          <select id="visitType">
+            <option value="">Select visit type...</option>
+            <option>New Patient Consultation</option>
+            <option>Spinal Adjustment</option>
+            <option>Follow-up Visit</option>
+            <option>X-Ray / Assessment</option>
+            <option>Massage Therapy</option>
+            <option>Rehabilitation</option>
+            <option>Urgent / Pain Relief</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Duration</label>
+          <select id="duration">
+            <option value="15">15 minutes</option>
+            <option value="30" selected>30 minutes</option>
+            <option value="45">45 minutes</option>
+            <option value="60">60 minutes</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Reason for visit *</label><input type="text" id="reason" placeholder="e.g. Lower back pain, neck stiffness, headaches..."/></div>
+
+      <div class="section-label">Recurring appointment</div>
+      <div class="toggle-row">
+        <label class="toggle">
+          <input type="checkbox" id="recurToggle" onchange="document.getElementById('recurOptions').classList.toggle('show',this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="lbl">Make this a recurring appointment</span>
+      </div>
+      <div class="recur-options" id="recurOptions">
+        <div class="recur-row">
+          <span>Repeat every</span>
+          <input type="number" id="recurInterval" value="1" min="1" max="12"/>
+          <select id="recurFreq">
+            <option value="WEEKLY">week(s)</option>
+            <option value="BIWEEKLY">2 weeks</option>
+            <option value="MONTHLY">month(s)</option>
+          </select>
+          <span>for</span>
+          <input type="number" id="recurCount" value="6" min="2" max="52"/>
+          <span>occurrences</span>
+        </div>
+      </div>
+
+      <div class="section-label">Clinical notes</div>
+      <div class="form-group"><label>Notes for provider</label><textarea id="notes" placeholder="Symptoms, medical history, allergies, or special instructions..."></textarea></div>
+
+      <button class="btn-submit" id="submitBtn" onclick="submitAppointment()">Add to Google Calendar</button>
+      <div class="success-banner" id="successBanner"></div>
+      <div class="error-banner" id="errorBanner"></div>
+    </div>
+
+    <!-- UPCOMING TAB -->
+    <div id="tabUpcoming" style="display:none;">
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterAppts('all',this)">All</button>
+        <button class="filter-btn" onclick="filterAppts('New Patient',this)">New patients</button>
+        <button class="filter-btn" onclick="filterAppts('Adjustment',this)">Adjustments</button>
+        <button class="filter-btn" onclick="filterAppts('Urgent',this)">Urgent</button>
+        <button class="filter-btn" onclick="filterAppts('Follow-up',this)">Follow-ups</button>
+      </div>
+      <div id="apptList" class="appt-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PRACTITIONER MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>Add practitioner</h3>
+    <div class="form-group"><label>Full name</label><input type="text" id="newPracName" placeholder="Dr. Williams"/></div>
+    <div class="form-group"><label>Title / role</label><input type="text" id="newPracRole" placeholder="Chiropractor"/></div>
+    <div class="form-group">
+      <label>Avatar color</label>
+      <div class="color-picker" id="colorPicker"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="savePractitioner()">Add practitioner</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CLIENT_ID = '140347058371-3hfmt5pbdsakq3gu0h0kkd4ae5c4a85e.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/userinfo.email';
+
+let tokenClient, accessToken = null, allEvents = [], activeFilter = 'all', selectedPrac = 0, selectedColor = 0;
+
+const COLORS = [
+  {bg:'#dbeafe',text:'#1e40af'},{bg:'#dcfce7',text:'#166534'},
+  {bg:'#fce7f3',text:'#9d174d'},{bg:'#fef3c7',text:'#92400e'},
+  {bg:'#ede9fe',text:'#5b21b6'},{bg:'#fee2e2',text:'#991b1b'},
+  {bg:'#e0f2fe',text:'#0369a1'},{bg:'#f0fdf4',text:'#14532d'}
+];
+
+let practitioners = [
+  {name:'Dr. Smith', role:'Chiropractor',    initials:'DS', colorIdx:0},
+  {name:'Dr. Jones', role:'Chiropractor',    initials:'DJ', colorIdx:1},
+  {name:'Dr. Patel', role:'Rehab specialist',initials:'DP', colorIdx:2},
+];
+
+function getInitials(name){
+  return name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+}
+
+function renderPractitioners(){
+  const grid = document.getElementById('pracGrid');
+  grid.innerHTML = practitioners.map((p,i) => {
+    const c = COLORS[p.colorIdx];
+    return `<div class="prac-card${i===selectedPrac?' selected':''}" onclick="selectPrac(${i})">
+      <div class="prac-avatar" style="background:${c.bg};color:${c.text}">${p.initials}</div>
+      <div class="prac-name">${p.name}</div>
+      <div class="prac-role">${p.role}</div>
+    </div>`;
+  }).join('') +
+  `<button class="add-prac-card" onclick="openModal()">
+    <span class="plus">+</span>
+    <span class="lbl">Add practitioner</span>
+  </button>`;
+}
+
+function selectPrac(i){ selectedPrac = i; renderPractitioners(); }
+
+function openModal(){
+  selectedColor = 0;
+  document.getElementById('newPracName').value = '';
+  document.getElementById('newPracRole').value = '';
+  renderColorPicker();
+  document.getElementById('modalOverlay').classList.add('show');
+}
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('show'); }
+
+function renderColorPicker(){
+  document.getElementById('colorPicker').innerHTML = COLORS.map((c,i) =>
+    `<div class="color-swatch${i===selectedColor?' selected':''}" style="background:${c.bg};border-color:${i===selectedColor?c.text:'transparent'}" onclick="selectColor(${i})"></div>`
+  ).join('');
+}
+function selectColor(i){ selectedColor = i; renderColorPicker(); }
+
+function savePractitioner(){
+  const name = document.getElementById('newPracName').value.trim();
+  const role = document.getElementById('newPracRole').value.trim();
+  if(!name){ alert('Please enter a name.'); return; }
+  practitioners.push({name, role: role||'Practitioner', initials: getInitials(name), colorIdx: selectedColor});
+  selectedPrac = practitioners.length - 1;
+  renderPractitioners();
+  closeModal();
+}
+
+function switchTab(tab, el){
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tabBook').style.display     = tab==='book'     ? 'block' : 'none';
+  document.getElementById('tabUpcoming').style.display = tab==='upcoming' ? 'block' : 'none';
+  if(tab==='upcoming') loadUpcoming();
+}
+
+function loadGIS(){
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: (resp) => {
+      if(resp.error){ showError('Authorization failed: ' + resp.error); return; }
+      accessToken = resp.access_token;
+      showApp();
+    }
+  });
+}
+
+function handleAuthClick(){
+  if(!tokenClient) loadGIS();
+  tokenClient.requestAccessToken();
+}
+
+function showApp(){
+  document.getElementById('authSection').style.display = 'none';
+  document.getElementById('appSection').style.display  = 'block';
+  document.getElementById('userBar').style.display     = 'flex';
+  document.getElementById('apptDate').value = new Date().toISOString().split('T')[0];
+  renderPractitioners();
+  fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{'Authorization':`Bearer ${accessToken}`}})
+    .then(r=>r.json()).then(d=>{ if(d.email) document.getElementById('userEmailDisplay').textContent = d.email; }).catch(()=>{});
+}
+
+function signOut(){
+  if(accessToken) google.accounts.oauth2.revoke(accessToken, ()=>{});
+  accessToken = null;
+  document.getElementById('authSection').style.display = 'flex';
+  document.getElementById('appSection').style.display  = 'none';
+  document.getElementById('userBar').style.display     = 'none';
+}
+
+function showError(msg){
+  const el = document.getElementById('errorBanner');
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(()=>{ el.style.display='none'; }, 7000);
+}
+
+async function submitAppointment(){
+  const firstName     = document.getElementById('firstName').value.trim();
+  const lastName      = document.getElementById('lastName').value.trim();
+  const dob           = document.getElementById('dob').value;
+  const phone         = document.getElementById('phone').value.trim();
+  const email         = document.getElementById('email').value.trim();
+  const apptDate      = document.getElementById('apptDate').value;
+  const apptTime      = document.getElementById('apptTime').value;
+  const visitType     = document.getElementById('visitType').value;
+  const duration      = parseInt(document.getElementById('duration').value);
+  const reason        = document.getElementById('reason').value.trim();
+  const insurance     = document.getElementById('insurance').value.trim();
+  const notes         = document.getElementById('notes').value.trim();
+  const isRecur       = document.getElementById('recurToggle').checked;
+  const recurFreq     = document.getElementById('recurFreq').value;
+  const recurCount    = parseInt(document.getElementById('recurCount').value);
+  const recurInterval = parseInt(document.getElementById('recurInterval').value)||1;
+
+  if(!firstName||!lastName||!dob||!apptDate||!apptTime||!visitType||!reason){
+    alert('Please fill in all required fields marked with *.'); return;
+  }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'Saving to calendar...';
+
+  const tz      = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const startDT = new Date(`${apptDate}T${apptTime}`);
+  const endDT   = new Date(startDT.getTime() + duration * 60000);
+  const dobFmt  = new Date(dob+'T00:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  const prac    = practitioners[selectedPrac];
+
+  const description = [
+    `PATIENT: ${firstName} ${lastName}`,
+    `DOB: ${dobFmt}`,
+    `Phone: ${phone||'N/A'}`,
+    `Email: ${email||'N/A'}`,
+    `Insurance: ${insurance||'N/A'}`,
+    '',
+    `PRACTITIONER: ${prac.name} (${prac.role})`,
+    `VISIT TYPE: ${visitType}`,
+    `REASON FOR VISIT: ${reason}`,
+    notes ? `\nNOTES:\n${notes}` : ''
+  ].join('\n');
+
+  const event = {
+    summary: `${visitType} — ${firstName} ${lastName} (${prac.name})`,
+    description,
+    start: {dateTime: startDT.toISOString(), timeZone: tz},
+    end:   {dateTime: endDT.toISOString(),   timeZone: tz},
+    colorId: visitType.includes('New Patient') ? '9' : visitType.includes('Urgent') ? '11' : '1'
+  };
+
+  if(isRecur){
+    const freq     = recurFreq === 'BIWEEKLY' ? 'WEEKLY' : recurFreq;
+    const interval = recurFreq === 'BIWEEKLY' ? 2 : recurInterval;
+    event.recurrence = [`RRULE:FREQ=${freq};INTERVAL=${interval};COUNT=${recurCount}`];
+  }
+
+  try {
+    const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events',{
+      method:'POST',
+      headers:{'Authorization':`Bearer ${accessToken}`,'Content-Type':'application/json'},
+      body: JSON.stringify(event)
+    });
+    if(res.ok){
+      const banner  = document.getElementById('successBanner');
+      const dateStr = startDT.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+      const timeStr = startDT.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+      banner.textContent = `Appointment saved for ${firstName} ${lastName} on ${dateStr} at ${timeStr} with ${prac.name}.${isRecur?' Repeats '+recurCount+' times.':''}`;
+      banner.style.display = 'block';
+      setTimeout(()=>{ banner.style.display='none'; }, 8000);
+      ['firstName','lastName','dob','phone','email','apptTime','reason','insurance','notes'].forEach(id=>document.getElementById(id).value='');
+      document.getElementById('visitType').value = '';
+      document.getElementById('recurToggle').checked = false;
+      document.getElementById('recurOptions').classList.remove('show');
+    } else {
+      const err = await res.json();
+      showError('Error: ' + (err.error?.message||'Unknown error'));
+    }
+  } catch(e){ showError('Network error: ' + e.message); }
+
+  btn.disabled = false; btn.textContent = 'Add to Google Calendar';
+}
+
+async function loadUpcoming(){
+  const list   = document.getElementById('apptList');
+  list.innerHTML = '<div class="loading-state">Loading appointments...</div>';
+  const now    = new Date().toISOString();
+  const future = new Date(Date.now() + 60*24*60*60*1000).toISOString();
+  try {
+    const res  = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${now}&timeMax=${future}&singleEvents=true&orderBy=startTime&maxResults=100`,
+      {headers:{'Authorization':`Bearer ${accessToken}`}}
+    );
+    const data = await res.json();
+    allEvents  = (data.items||[]).filter(e => e.summary && e.summary.includes('—'));
+    renderEvents();
+  } catch(e){ list.innerHTML = '<div class="empty-state">Could not load appointments.</div>'; }
+}
+
+function filterAppts(f, el){
+  activeFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderEvents();
+}
+
+function getBadge(summary){
+  if(summary.includes('New Patient')) return '<span class="appt-badge badge-new">New patient</span>';
+  if(summary.includes('Urgent'))      return '<span class="appt-badge badge-urgent">Urgent</span>';
+  if(summary.includes('Adjustment'))  return '<span class="appt-badge badge-adj">Adjustment</span>';
+  if(summary.includes('Follow-up'))   return '<span class="appt-badge badge-other">Follow-up</span>';
+  return '<span class="appt-badge badge-other">Appointment</span>';
+}
+
+function renderEvents(){
+  const list   = document.getElementById('apptList');
+  let events   = activeFilter==='all' ? allEvents : allEvents.filter(e => e.summary.includes(activeFilter));
+  if(!events.length){ list.innerHTML = '<div class="empty-state">No upcoming appointments found.</div>'; return; }
+  list.innerHTML = events.map(e => {
+    const dt       = new Date(e.start.dateTime || e.start.date);
+    const month    = dt.toLocaleDateString('en-US',{month:'short'}).toUpperCase();
+    const day      = dt.getDate();
+    const time     = e.start.dateTime ? dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) : 'All day';
+    const parts    = e.summary.split('—');
+    const vtype    = parts[0]?.trim()||'Appointment';
+    const patPrac  = parts[1]?.trim()||'';
+    const recurBadge = e.recurrence ? '<span class="appt-badge badge-recur">Recurring</span>' : '';
+    return `<div class="appt-item">
+      <div class="appt-date-block"><div class="appt-month">${month}</div><div class="appt-day">${day}</div></div>
+      <div class="appt-info">
+        <div class="appt-title">${patPrac}${getBadge(e.summary)}${recurBadge}</div>
+        <div class="appt-meta">${vtype} &middot; ${time}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.onload = () => { if(typeof google !== 'undefined') loadGIS(); };
+</script>
+<script src="https://accounts.google.com/gsi/client" onload="loadGIS()" async defer></script>
+</body>
+</html>
