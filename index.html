@@ -162,10 +162,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray
 
     <!-- BOOK TAB -->
     <div id="tabBook" class="form-card">
-      <div class="section-label first">Practitioner</div>
-      <div class="prac-grid" id="pracGrid"></div>
-
-      <div class="section-label">Patient information</div>
+      <div class="section-label first">Patient information</div>
       <div class="form-row">
         <div class="form-group"><label>First name *</label><input type="text" id="firstName" placeholder="Jane"/></div>
         <div class="form-group"><label>Last name *</label><input type="text" id="lastName" placeholder="Smith"/></div>
@@ -286,9 +283,7 @@ const COLORS = [
 ];
 
 let practitioners = [
-  {name:'Dr. Smith', role:'Chiropractor',    initials:'DS', colorIdx:0},
-  {name:'Dr. Jones', role:'Chiropractor',    initials:'DJ', colorIdx:1},
-  {name:'Dr. Patel', role:'Rehab specialist',initials:'DP', colorIdx:2},
+  {name:'Dr. Carlos Rodriguez', role:'Chiropractor', initials:'CR', colorIdx:0},
 ];
 
 function getInitials(name){
@@ -304,11 +299,7 @@ function renderPractitioners(){
       <div class="prac-name">${p.name}</div>
       <div class="prac-role">${p.role}</div>
     </div>`;
-  }).join('') +
-  `<button class="add-prac-card" onclick="openModal()">
-    <span class="plus">+</span>
-    <span class="lbl">Add practitioner</span>
-  </button>`;
+  }).join('');
 }
 
 function selectPrac(i){ selectedPrac = i; renderPractitioners(); }
@@ -435,6 +426,7 @@ async function submitAppointment(){
   const event = {
     summary: `${visitType} — ${firstName} ${lastName} (${prac.name})`,
     description,
+    location: '13215 Ventura Blvd, Suite 100, Sherman Oaks, CA 91423',
     start: {dateTime: startDT.toISOString(), timeZone: tz},
     end:   {dateTime: endDT.toISOString(),   timeZone: tz},
     colorId: visitType.includes('New Patient') ? '9' : visitType.includes('Urgent') ? '11' : '1'
