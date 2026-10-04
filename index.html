@@ -41,6 +41,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray
 .form-card{background:white;border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:1.75rem;}
 .section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--gray-400);margin:1.5rem 0 0.875rem;padding-top:1.25rem;border-top:1px solid var(--gray-100);}
 .section-label.first{margin-top:0;padding-top:0;border-top:none;}
+.scheduling-note{font-size:13px;color:var(--gray-600);line-height:1.6;margin-bottom:1rem;}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
 .form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
 .form-group label{font-size:12px;font-weight:500;color:var(--gray-600);}
@@ -162,21 +163,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray
 
     <!-- BOOK TAB -->
     <div id="tabBook" class="form-card">
-      <div class="section-label first">Patient information</div>
-      <div class="form-row">
-        <div class="form-group"><label>First name *</label><input type="text" id="firstName" placeholder="Jane"/></div>
-        <div class="form-group"><label>Last name *</label><input type="text" id="lastName" placeholder="Smith"/></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Date of birth *</label><input type="date" id="dob"/></div>
-        <div class="form-group"><label>Phone number</label><input type="tel" id="phone" placeholder="(555) 000-0000"/></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Email address</label><input type="email" id="email" placeholder="jane@example.com"/></div>
-        <div class="form-group"><label>Insurance provider</label><input type="text" id="insurance" placeholder="e.g. Blue Cross, Aetna..."/></div>
-      </div>
-
-      <div class="section-label">Appointment details</div>
+      <div class="section-label first">Appointment details</div>
+      <p class="scheduling-note">Calendar bookings contain a random appointment reference, visit type, practitioner, and schedule. Keep patient details in your clinical record and copy the appointment reference there to match the booking.</p>
       <div class="form-row">
         <div class="form-group"><label>Date *</label><input type="date" id="apptDate"/></div>
         <div class="form-group"><label>Time *</label><input type="time" id="apptTime"/></div>
@@ -205,7 +193,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray
           </select>
         </div>
       </div>
-      <div class="form-group"><label>Reason for visit *</label><input type="text" id="reason" placeholder="e.g. Lower back pain, neck stiffness, headaches..."/></div>
 
       <div class="section-label">Recurring appointment</div>
       <div class="toggle-row">
@@ -229,9 +216,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray
           <span>occurrences</span>
         </div>
       </div>
-
-      <div class="section-label">Clinical notes</div>
-      <div class="form-group"><label>Notes for provider</label><textarea id="notes" placeholder="Symptoms, medical history, allergies, or special instructions..."></textarea></div>
 
       <button class="btn-submit" id="submitBtn" onclick="submitAppointment()">Add to Google Calendar</button>
       <div class="success-banner" id="successBanner"></div>
@@ -292,6 +276,7 @@ function getInitials(name){
 
 function renderPractitioners(){
   const grid = document.getElementById('pracGrid');
+  if(!grid) return;
   grid.innerHTML = practitioners.map((p,i) => {
     const c = COLORS[p.colorIdx];
     return `<div class="prac-card${i===selectedPrac?' selected':''}" onclick="selectPrac(${i})">
@@ -380,24 +365,16 @@ function showError(msg){
 }
 
 async function submitAppointment(){
-  const firstName     = document.getElementById('firstName').value.trim();
-  const lastName      = document.getElementById('lastName').value.trim();
-  const dob           = document.getElementById('dob').value;
-  const phone         = document.getElementById('phone').value.trim();
-  const email         = document.getElementById('email').value.trim();
   const apptDate      = document.getElementById('apptDate').value;
   const apptTime      = document.getElementById('apptTime').value;
   const visitType     = document.getElementById('visitType').value;
   const duration      = parseInt(document.getElementById('duration').value);
-  const reason        = document.getElementById('reason').value.trim();
-  const insurance     = document.getElementById('insurance').value.trim();
-  const notes         = document.getElementById('notes').value.trim();
   const isRecur       = document.getElementById('recurToggle').checked;
   const recurFreq     = document.getElementById('recurFreq').value;
   const recurCount    = parseInt(document.getElementById('recurCount').value);
   const recurInterval = parseInt(document.getElementById('recurInterval').value)||1;
 
-  if(!firstName||!lastName||!dob||!apptDate||!apptTime||!visitType||!reason){
+  if(!apptDate||!apptTime||!visitType){
     alert('Please fill in all required fields marked with *.'); return;
   }
 
@@ -407,26 +384,12 @@ async function submitAppointment(){
   const tz      = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const startDT = new Date(`${apptDate}T${apptTime}`);
   const endDT   = new Date(startDT.getTime() + duration * 60000);
-  const dobFmt  = new Date(dob+'T00:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
   const prac    = practitioners[selectedPrac];
+  const appointmentRef = crypto.randomUUID();
 
-  const description = [
-    `PATIENT: ${firstName} ${lastName}`,
-    `DOB: ${dobFmt}`,
-    `Phone: ${phone||'N/A'}`,
-    `Email: ${email||'N/A'}`,
-    `Insurance: ${insurance||'N/A'}`,
-    '',
-    `PRACTITIONER: ${prac.name} (${prac.role})`,
-    `VISIT TYPE: ${visitType}`,
-    `REASON FOR VISIT: ${reason}`,
-    notes ? `\nNOTES:\n${notes}` : ''
-  ].join('\n');
-
+  // Send scheduling data only; never put patient details in Calendar fields.
   const event = {
-    summary: `${visitType} — ${firstName} ${lastName} (${prac.name})`,
-    description,
-    location: '13215 Ventura Blvd, Suite 100, Sherman Oaks, CA 91423',
+    summary: `${visitType} — Appointment ${appointmentRef} (${prac.name})`,
     start: {dateTime: startDT.toISOString(), timeZone: tz},
     end:   {dateTime: endDT.toISOString(),   timeZone: tz},
     colorId: visitType.includes('New Patient') ? '9' : visitType.includes('Urgent') ? '11' : '1'
@@ -448,10 +411,10 @@ async function submitAppointment(){
       const banner  = document.getElementById('successBanner');
       const dateStr = startDT.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
       const timeStr = startDT.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
-      banner.textContent = `Appointment saved for ${firstName} ${lastName} on ${dateStr} at ${timeStr} with ${prac.name}.${isRecur?' Repeats '+recurCount+' times.':''}`;
+      banner.textContent = `Appointment ${appointmentRef} saved on ${dateStr} at ${timeStr} with ${prac.name}.${isRecur?' Repeats '+recurCount+' times.':''} Copy this reference to your clinical record; it is also available in Upcoming appointments.`;
       banner.style.display = 'block';
       setTimeout(()=>{ banner.style.display='none'; }, 8000);
-      ['firstName','lastName','dob','phone','email','apptTime','reason','insurance','notes'].forEach(id=>document.getElementById(id).value='');
+      document.getElementById('apptTime').value = '';
       document.getElementById('visitType').value = '';
       document.getElementById('recurToggle').checked = false;
       document.getElementById('recurOptions').classList.remove('show');
@@ -506,12 +469,12 @@ function renderEvents(){
     const time     = e.start.dateTime ? dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) : 'All day';
     const parts    = e.summary.split('—');
     const vtype    = parts[0]?.trim()||'Appointment';
-    const patPrac  = parts[1]?.trim()||'';
-    const recurBadge = e.recurrence ? '<span class="appt-badge badge-recur">Recurring</span>' : '';
+    const booking  = parts[1]?.trim()||'';
+    const recurBadge = (e.recurrence || e.recurringEventId) ? '<span class="appt-badge badge-recur">Recurring</span>' : '';
     return `<div class="appt-item">
       <div class="appt-date-block"><div class="appt-month">${month}</div><div class="appt-day">${day}</div></div>
       <div class="appt-info">
-        <div class="appt-title">${patPrac}${getBadge(e.summary)}${recurBadge}</div>
+        <div class="appt-title">${booking}${getBadge(e.summary)}${recurBadge}</div>
         <div class="appt-meta">${vtype} &middot; ${time}</div>
       </div>
     </div>`;
